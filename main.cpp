@@ -9,33 +9,33 @@
 
 
 
- #include "vex.h"
+#include "vex.h"
 
 
- using namespace vex;
+using namespace vex;
 
 
- // Brain should be defined by default
- brain Brain;
+// Brain should be defined by default
+brain Brain;
 
 
 
 
- // START V5 MACROS
- #define waitUntil(condition) \
- do { \
- wait(5, msec); \
+// START V5 MACROS
+#define waitUntil(condition)                                                   \
+ do {                                                                         \
+   wait(5, msec);                                                             \
  } while (!(condition))
 
 
- #define repeat(iterations) \
+#define repeat(iterations)                                                     \
  for (int iterator = 0; iterator < iterations; iterator++)
- // END V5 MACROS
+// END V5 MACROS
 
 
 
 
- // Robot configuration code.
+// Robot configuration code.
 
 
 
@@ -44,20 +44,18 @@
 
 // generating and setting random seed
 void initializeRandomSeed(){
-int systemTime = Brain.Timer.systemHighResolution();
-double batteryCurrent = Brain.Battery.current();
-double batteryVoltage = Brain.Battery.voltage(voltageUnits::mV);
+ int systemTime = Brain.Timer.systemHighResolution();
+ double batteryCurrent = Brain.Battery.current();
+ double batteryVoltage = Brain.Battery.voltage(voltageUnits::mV);
 
 
-// Combine these values into a single integer
-int seed = int(batteryVoltage + batteryCurrent * 100) + systemTime;
+ // Combine these values into a single integer
+ int seed = int(batteryVoltage + batteryCurrent * 100) + systemTime;
 
 
-// Set the seed
-srand(seed);
+ // Set the seed
+ srand(seed);
 }
-
-
 
 
 
@@ -67,8 +65,8 @@ srand(seed);
 void vexcodeInit() {
 
 
-//Initializing random seed.
-initializeRandomSeed();
+ //Initializing random seed.
+ initializeRandomSeed();
 }
 
 
@@ -77,8 +75,8 @@ initializeRandomSeed();
 // Helper to make playing sounds from the V5 in VEXcode easier and
 // keeps the code cleaner by making it clear what is happening.
 void playVexcodeSound(const char *soundName) {
-printf("VEXPlaySound:%s\n", soundName);
-wait(5, msec);
+ printf("VEXPlaySound:%s\n", soundName);
+ wait(5, msec);
 }
 
 
@@ -86,108 +84,163 @@ wait(5, msec);
 
 
 /*----------------------------------------------------------------------------*/
-/* */
-/* Module: main.cpp */
-/* Author: {author} */
-/* Created: {date} */
-/* Description: V5 project */
-/* */
+/*                                                                            */
+/*    Module:       main.cpp                                                  */
+/*    Author:       {author}                                                  */
+/*    Created:      {date}                                                    */
+/*    Description:  V5 project                                                */
+/*                                                                            */
 /*----------------------------------------------------------------------------*/
 
 
 // Include the V5 Library
 #include "vex.h"
-
-
-// Allows for easier use of the VEX Library
+ // Allows for easier use of the VEX Library
 using namespace vex;
 
 
-// Create competition instance.
 competition Competition;
 
 
-// Create motor instances
-motor leftFront(PORT1, true);
-motor leftBack(PORT2, true);
-motor rightFront(PORT3);
-otor rightBack(PORT4);
+motor m_left_fwd(PORT19, true);
+motor m_left_rev(PORT20, true);
 
 
-// Create motor group instances
-motor_group leftMotors(leftFront, leftBack);
-motor_group rightMotors(leftFront, leftBack);
+motor m_right_fwd(PORT13);
 
 
-// Create controller instance
-controller Controller(primary); // primary keyword optional??
+motor m_right_rev(PORT12);
 
 
-// Copied from Raiyan can change later
-float curveMod(int x) {
-return 1 / (1 + exp(-abs(x / 300)));
+motor_group m_left(m_left_fwd, m_left_rev);
+motor_group m_right(m_right_fwd, m_right_rev);
+
+
+controller Controller(primary);
+
+
+float curve_modifier(int x) {
+ return 1 / (1 + exp(-abs(x / 300)));
 }
 
 
-void driverControl() {
-while (true) {
-// Controller input
-int ctrlVertical = Controller.Axis3.position();
-int ctrlHorizontal = Controller.Axis4.position();
+void driver_control() {
 
 
-// Speed values
-float speedMod = 1;
-// TODO speed modifier stuff for rotations specifically
+ while (true) {
 
 
-double leftSpeed = ctrlVertical;
-double rightSpeed = ctrlVertical;
+   int crVertical = Controller.Axis3.position();
+   int crHorizontal = Controller.Axis1.position();
 
 
-leftSpeed = curveMod(leftSpeed) * speedMod;
-rightSpeed = curveMod(rightSpeed) * speedMod;
+   double forwardSpeed = (crVertical);
+   double turnMagnitude = (crHorizontal);
 
 
-// Spin motor groups
-leftMotors.spin(forward, leftSpeed, rpm);
-rightMotors.spin(forward, rightSpeed, rpm);
+   //m_left.spin(vex::forward, (forwardSpeed + turnMagnitude) / 2, percent);
+   //m_right.spin(vex::forward, (forwardSpeed - turnMagnitude) / 2, percent);
 
 
-// Brain management
-Brain.Screen.clearScreen();
-Brain.Screen.print("NOAH IS SUPER COOL");
+   if (forwardSpeed >= 10) {
 
 
-// Controller management
-Controller.Screen.clearScreen();
+     if (turnMagnitude >= 10) {
 
 
-Controller.Screen.print("Vertical: ");
-Controller.Screen.newLine();
-Controller.Screen.print(ctrlVertical);
+       m_left.spin(vex::forward, (forwardSpeed + turnMagnitude / 2) / 1.5, percent);
+       m_right.spin(vex::forward, forwardSpeed / 1.5, percent);
 
 
-Controller.Screen.print("Horizontal: ");
-Controller.Screen.newLine();
-Controller.Screen.print(ctrlHorizontal);
-  }
+     }
+     else if (turnMagnitude <= -10) {
+
+
+       m_left.spin(vex::forward, forwardSpeed / 1.5, percent);
+       m_right.spin(vex::forward, (forwardSpeed - turnMagnitude / 2) / 1.5, percent);
+
+
+     }
+     else {
+
+
+       m_left.spin(vex::forward, forwardSpeed / 1.5, percent);
+       m_right.spin(vex::forward, forwardSpeed / 1.5, percent);
+
+
+     }
+
+
+   }
+   else if (forwardSpeed <= -10) {
+
+
+     if (turnMagnitude >= 10) {
+
+
+       m_left.spin(vex::forward, (forwardSpeed - turnMagnitude / 2) / 1.5, percent);
+       m_right.spin(vex::forward, forwardSpeed / 1.5, percent);
+
+
+     }
+     else if (turnMagnitude <= -10) {
+
+
+       m_left.spin(vex::forward, forwardSpeed / 1.5, percent);
+       m_right.spin(vex::forward, (forwardSpeed + turnMagnitude / 2) / 1.5, percent);
+
+
+     }
+     else {
+
+
+       m_left.spin(vex::forward, forwardSpeed / 1.5, percent);
+       m_right.spin(vex::forward, forwardSpeed / 1.5, percent);
+
+
+     }
+
+
+   }
+   else {
+
+
+     m_left.spin(vex::forward, (forwardSpeed + turnMagnitude) / 1.5, percent);
+     m_right.spin(vex::forward, (forwardSpeed - turnMagnitude) / 1.5, percent);
+
+
+   }
+    // Controller.Screen.print("Axis 1: ");
+   // Controller.Screen.print(crVertical);
+   // Controller.Screen.newLine();
+   // Controller.Screen.print("Axis 3: ");
+   // Controller.Screen.print(crHorizontal);
+   wait(1, msec);
+
+
+
+
+ }
+
+
 }
 
 
-void autonomousControl() {
+void autonomous_control() {
+
+
 }
 
 
 int main() {
-// Initializing Robot Configuration. DO NOT REMOVE!
-vexcodeInit();
+ // Initializing Robot Configuration. DO NOT REMOVE!
+ vexcodeInit();
+  Competition.drivercontrol(driver_control);
+ Competition.autonomous(autonomous_control);
 
 
-// Set up callback for the autonomous control period.
-Competition.autonomous(autonomousControl);
-
-
-// Set up callback for the driver control period.
-Competition.drivercontrol(driverControl);
+ return 0;
 }
+
+
+
