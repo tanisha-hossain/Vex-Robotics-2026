@@ -119,12 +119,23 @@ motor_group m_right(m_right_fwd, m_right_rev);
 controller Controller(primary);
 
 
-float curve_modifier(int x) {
- return 1 / (1 + exp(-abs(x / 300)));
-}
+// inertial Inertial(PORT14);
 
 
 void driver_control() {
+
+
+ double TURNWHEELRATIO = 1.5;
+ double TURNADJUSTMENTSCALING = 1/(TURNWHEELRATIO - 1);
+
+
+ // Brain.Screen.clearScreen();
+ // Brain.Screen.setCursor(1, 1);
+ // Brain.Screen.print("Calibrating...");
+ // while (Inertial.isCalibrating()) {
+ //   Inertial.calibrate();
+ //   wait(200, msec);
+ // }
 
 
  while (true) {
@@ -134,8 +145,14 @@ void driver_control() {
    int crHorizontal = Controller.Axis1.position();
 
 
-   double forwardSpeed = (crVertical);
-   double turnMagnitude = (crHorizontal);
+   double forwardSpeed = crVertical;
+   double turnMagnitude = crHorizontal;
+
+
+   Brain.Screen.clearScreen();
+   Brain.Screen.setCursor(1, 1);
+   Brain.Screen.print("Testing...");
+   // Brain.Screen.print(Inertial.rotation(degrees));
 
 
    //m_left.spin(vex::forward, (forwardSpeed + turnMagnitude) / 2, percent);
@@ -148,24 +165,24 @@ void driver_control() {
      if (turnMagnitude >= 10) {
 
 
-       m_left.spin(vex::forward, (forwardSpeed + turnMagnitude / 2) / 1.5, percent);
-       m_right.spin(vex::forward, forwardSpeed / 1.5, percent);
+       m_left.spin(vex::forward, (forwardSpeed + turnMagnitude / TURNADJUSTMENTSCALING) / TURNWHEELRATIO, percent);
+       m_right.spin(vex::forward, forwardSpeed / TURNWHEELRATIO, percent);
 
 
      }
      else if (turnMagnitude <= -10) {
 
 
-       m_left.spin(vex::forward, forwardSpeed / 1.5, percent);
-       m_right.spin(vex::forward, (forwardSpeed - turnMagnitude / 2) / 1.5, percent);
+       m_left.spin(vex::forward, forwardSpeed / TURNWHEELRATIO, percent);
+       m_right.spin(vex::forward, (forwardSpeed - turnMagnitude / TURNADJUSTMENTSCALING) / TURNWHEELRATIO, percent);
 
 
      }
      else {
 
 
-       m_left.spin(vex::forward, forwardSpeed / 1.5, percent);
-       m_right.spin(vex::forward, forwardSpeed / 1.5, percent);
+       m_left.spin(vex::forward, forwardSpeed / TURNWHEELRATIO, percent);
+       m_right.spin(vex::forward, forwardSpeed / TURNWHEELRATIO, percent);
 
 
      }
@@ -178,24 +195,24 @@ void driver_control() {
      if (turnMagnitude >= 10) {
 
 
-       m_left.spin(vex::forward, (forwardSpeed - turnMagnitude / 2) / 1.5, percent);
-       m_right.spin(vex::forward, forwardSpeed / 1.5, percent);
+       m_left.spin(vex::forward, (forwardSpeed - turnMagnitude / TURNADJUSTMENTSCALING) / TURNWHEELRATIO, percent);
+       m_right.spin(vex::forward, forwardSpeed / TURNWHEELRATIO, percent);
 
 
      }
      else if (turnMagnitude <= -10) {
 
 
-       m_left.spin(vex::forward, forwardSpeed / 1.5, percent);
-       m_right.spin(vex::forward, (forwardSpeed + turnMagnitude / 2) / 1.5, percent);
+       m_left.spin(vex::forward, forwardSpeed / TURNWHEELRATIO, percent);
+       m_right.spin(vex::forward, (forwardSpeed + turnMagnitude / TURNADJUSTMENTSCALING) / TURNWHEELRATIO, percent);
 
 
      }
      else {
 
 
-       m_left.spin(vex::forward, forwardSpeed / 1.5, percent);
-       m_right.spin(vex::forward, forwardSpeed / 1.5, percent);
+       m_left.spin(vex::forward, forwardSpeed / TURNWHEELRATIO, percent);
+       m_right.spin(vex::forward, forwardSpeed / TURNWHEELRATIO, percent);
 
 
      }
@@ -205,8 +222,8 @@ void driver_control() {
    else {
 
 
-     m_left.spin(vex::forward, (forwardSpeed + turnMagnitude) / 1.5, percent);
-     m_right.spin(vex::forward, (forwardSpeed - turnMagnitude) / 1.5, percent);
+     m_left.spin(vex::forward, (forwardSpeed + turnMagnitude) / TURNWHEELRATIO, percent);
+     m_right.spin(vex::forward, (forwardSpeed - turnMagnitude) / TURNWHEELRATIO, percent);
 
 
    }
@@ -235,12 +252,17 @@ void autonomous_control() {
 int main() {
  // Initializing Robot Configuration. DO NOT REMOVE!
  vexcodeInit();
+
+
+ Brain.Screen.print("Starting...");
   Competition.drivercontrol(driver_control);
  Competition.autonomous(autonomous_control);
 
 
  return 0;
 }
+
+
 
 
 
